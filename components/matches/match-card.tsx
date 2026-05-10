@@ -1,6 +1,7 @@
 import { Lock, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { TeamTrigger } from "@/components/teams/team-trigger";
 import { Countdown } from "@/components/matches/countdown";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +139,10 @@ export function MatchCard({
       </header>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5">
-        <div className="flex flex-col items-center gap-2 text-center">
+        <TeamTrigger
+          code={homeCode}
+          className="flex flex-col items-center gap-2 text-center"
+        >
           <TeamFlag url={homeFlagUrl} alt={homeName} size="xl" />
           <div>
             <p className="font-semibold leading-tight">{homeName}</p>
@@ -148,7 +152,7 @@ export function MatchCard({
               </p>
             )}
           </div>
-        </div>
+        </TeamTrigger>
 
         <div className="flex flex-col items-center gap-1 text-center">
           {finished ? (
@@ -175,7 +179,10 @@ export function MatchCard({
           )}
         </div>
 
-        <div className="flex flex-col items-center gap-2 text-center">
+        <TeamTrigger
+          code={awayCode}
+          className="flex flex-col items-center gap-2 text-center"
+        >
           <TeamFlag url={awayFlagUrl} alt={awayName} size="xl" />
           <div>
             <p className="font-semibold leading-tight">{awayName}</p>
@@ -185,7 +192,7 @@ export function MatchCard({
               </p>
             )}
           </div>
-        </div>
+        </TeamTrigger>
       </div>
 
       {(prediction || closed || children) && (

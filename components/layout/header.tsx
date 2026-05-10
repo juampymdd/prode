@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { Trophy, Sparkles } from "lucide-react";
-import { logoutAction } from "@/actions/auth-actions";
+import { ListChecks, ShieldCheck, Table as TableIcon, Trophy } from "lucide-react";
 import { getUserWithProfile } from "@/lib/auth/get-user";
-import { initials } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { UserMenu } from "@/components/layout/user-menu";
+
+const NAV_LINKS = [
+  { href: "/partidos", label: "Partidos", icon: ListChecks },
+  { href: "/standings", label: "Tablas", icon: TableIcon },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
+] as const;
 
 export async function Header() {
   const { user, profile } = await getUserWithProfile();
@@ -16,49 +20,41 @@ export async function Header() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 font-bold tracking-tight"
+          className="flex items-center"
+          aria-label="Prode 26 — dashboard"
         >
-          <span className="relative flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <Trophy className="size-4" />
-            <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-accent" />
-          </span>
-          <span className="hidden sm:inline">Prode 26</span>
-          <span className="sm:hidden">P26</span>
+          <BrandLogo priority />
         </Link>
 
         {user && (
           <nav className="flex items-center gap-2">
-            <div className="hidden items-center gap-1 md:flex">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/partidos">Partidos</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/standings">Tablas</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/ranking">Ranking</Link>
-              </Button>
+            <div className="hidden items-center gap-0.5 md:flex">
+              {NAV_LINKS.map((l) => {
+                const Icon = l.icon;
+                return (
+                  <Button asChild key={l.href} variant="ghost" size="sm">
+                    <Link href={l.href}>
+                      <Icon className="size-4" aria-hidden />
+                      {l.label}
+                    </Link>
+                  </Button>
+                );
+              })}
               {isAdmin && (
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/admin/users">Admin</Link>
+                  <Link href="/admin/users">
+                    <ShieldCheck className="size-4" aria-hidden />
+                    Admin
+                  </Link>
                 </Button>
               )}
             </div>
-            {isAdmin && (
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                <Sparkles className="size-3" /> Admin
-              </Badge>
-            )}
-            <Avatar className="size-9 ring-2 ring-primary/10">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {initials(profile?.name ?? user.email ?? "?")}
-              </AvatarFallback>
-            </Avatar>
-            <form action={logoutAction}>
-              <Button type="submit" variant="ghost" size="sm">
-                Salir
-              </Button>
-            </form>
+
+            <UserMenu
+              name={profile?.name ?? null}
+              email={user.email ?? null}
+              isAdmin={isAdmin}
+            />
           </nav>
         )}
       </div>

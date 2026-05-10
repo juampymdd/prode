@@ -1,4 +1,4 @@
-import { Trophy } from "lucide-react";
+import { Star, Trophy } from "lucide-react";
 import { BracketCard, type BracketCardData } from "./bracket-card";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +72,10 @@ function CenterColumn({
         </span>
       </div>
       <div>
-        <p className="mb-1.5 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
-          ★ Final ★
+        <p className="mb-1.5 flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
+          <Star className="size-3 fill-current" aria-hidden />
+          Final
+          <Star className="size-3 fill-current" aria-hidden />
         </p>
         <BracketCard match={final} variant="featured" />
       </div>

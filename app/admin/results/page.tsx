@@ -1,15 +1,35 @@
 import { createClient } from "@/lib/supabase/server";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/layout/empty-state";
 import { MatchSummary } from "@/components/matches/match-summary";
 import { ResultForm, RecalcButton } from "@/components/admin/result-form";
+import { ClearResultButton } from "@/components/admin/clear-result-button";
+import {
+  ResultsTabs,
+  isResultTabKey,
+  type ResultTabKey,
+} from "@/components/admin/results-tabs";
 
-export default async function AdminResultsPage() {
+type Row = {
+  id: string;
+  starts_at: string;
+  status: "scheduled" | "locked" | "live" | "finished";
+  home_score: number | null;
+  away_score: number | null;
+  stage: string | null;
+  group_name: string | null;
+  home: { name: string; code: string | null; flag_url: string | null } | null;
+  away: { name: string; code: string | null; flag_url: string | null } | null;
+};
+
+export default async function AdminResultsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const sp = await searchParams;
+  const active: ResultTabKey = isResultTabKey(sp.tab) ? sp.tab : "pendientes";
+
   const supabase = await createClient();
   const { data: matches } = await supabase
     .from("matches")
@@ -18,21 +38,10 @@ export default async function AdminResultsPage() {
     )
     .order("starts_at", { ascending: true });
 
-  type Row = {
-    id: string;
-    starts_at: string;
-    status: "scheduled" | "locked" | "live" | "finished";
-    home_score: number | null;
-    away_score: number | null;
-    stage: string | null;
-    group_name: string | null;
-    home: { name: string; code: string | null; flag_url: string | null } | null;
-    away: { name: string; code: string | null; flag_url: string | null } | null;
-  };
   const list = (matches ?? []) as unknown as Row[];
-
-  const pending = list.filter((m) => m.status !== "finished");
-  const finished = list.filter((m) => m.status === "finished");
+  const hasResult = (m: Row) => m.home_score != null && m.away_score != null;
+  const pending = list.filter((m) => !hasResult(m));
+  const loaded = list.filter(hasResult);
 
   return (
     <div className="space-y-6">
@@ -44,9 +53,13 @@ export default async function AdminResultsPage() {
         </p>
       </header>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Pendientes</h2>
-        {pending.length === 0 ? (
+      <ResultsTabs
+        active={active}
+        counts={{ pendientes: pending.length, cargados: loaded.length }}
+      />
+
+      {active === "pendientes" ? (
+        pending.length === 0 ? (
           <EmptyState
             title="No hay partidos pendientes"
             description="Cuando agregues partidos, vas a verlos acá listos para cargar resultado."
@@ -85,52 +98,53 @@ export default async function AdminResultsPage() {
               </Card>
             ))}
           </div>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Finalizados</h2>
-        {finished.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Todavía no cerraste ningún partido.
-          </p>
-        ) : (
-          <div className="grid gap-3">
-            {finished.map((m) => (
-              <Card key={m.id}>
-                <CardHeader>
-                  <CardTitle className="sr-only">
-                    {m.home?.name} vs {m.away?.name}
-                  </CardTitle>
-                  <MatchSummary
-                    homeName={m.home?.name ?? "TBD"}
-                    awayName={m.away?.name ?? "TBD"}
-                    homeCode={m.home?.code}
-                    awayCode={m.away?.code}
-                    homeFlagUrl={m.home?.flag_url}
-                    awayFlagUrl={m.away?.flag_url}
-                    startsAt={m.starts_at}
-                    status={m.status}
-                    homeScore={m.home_score}
-                    awayScore={m.away_score}
-                    stage={m.stage}
-                    groupName={m.group_name}
-                  />
-                </CardHeader>
-                <CardContent className="border-t pt-4 flex flex-wrap items-center gap-3">
-                  <ResultForm
+        )
+      ) : loaded.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Todavía no cargaste ningún resultado.
+        </p>
+      ) : (
+        <div className="grid gap-3">
+          {loaded.map((m) => (
+            <Card key={m.id}>
+              <CardHeader>
+                <CardTitle className="sr-only">
+                  {m.home?.name} vs {m.away?.name}
+                </CardTitle>
+                <MatchSummary
+                  homeName={m.home?.name ?? "TBD"}
+                  awayName={m.away?.name ?? "TBD"}
+                  homeCode={m.home?.code}
+                  awayCode={m.away?.code}
+                  homeFlagUrl={m.home?.flag_url}
+                  awayFlagUrl={m.away?.flag_url}
+                  startsAt={m.starts_at}
+                  status={m.status}
+                  homeScore={m.home_score}
+                  awayScore={m.away_score}
+                  stage={m.stage}
+                  groupName={m.group_name}
+                />
+              </CardHeader>
+              <CardContent className="flex flex-wrap items-center gap-3 border-t pt-4">
+                <ResultForm
+                  matchId={m.id}
+                  defaultHome={m.home_score}
+                  defaultAway={m.away_score}
+                  finished
+                />
+                <RecalcButton matchId={m.id} />
+                <div className="ml-auto">
+                  <ClearResultButton
                     matchId={m.id}
-                    defaultHome={m.home_score}
-                    defaultAway={m.away_score}
-                    finished
+                    matchLabel={`${m.home?.name ?? "TBD"} vs ${m.away?.name ?? "TBD"}`}
                   />
-                  <RecalcButton matchId={m.id} />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PUBLIC_PATHS = ["/", "/login"];
-const PUBLIC_PREFIXES = ["/auth/"];
+const PUBLIC_PATHS = ["/", "/login", "/terminos"];
+const PUBLIC_PREFIXES = ["/auth/", "/terminos/"];
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.includes(pathname)) return true;

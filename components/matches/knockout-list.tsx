@@ -1,3 +1,4 @@
+import { Star } from "lucide-react";
 import { BracketCard, type BracketCardData } from "./bracket-card";
 
 // Match numbers fixed by the FIFA bracket seed (see knockout migration).
@@ -19,8 +20,10 @@ export function KnockoutList({ matches, variant = "grid" }: KnockoutListProps) {
       <div className="mx-auto max-w-md space-y-6">
         {final && (
           <div>
-            <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-accent-foreground">
-              ★ Final ★
+            <p className="mb-2 flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-accent-foreground">
+              <Star className="size-3 fill-current" aria-hidden />
+              Final
+              <Star className="size-3 fill-current" aria-hidden />
             </p>
             <BracketCard match={final} variant="featured" />
           </div>

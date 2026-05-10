@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 export default function AuthLayout({
   children,
@@ -23,6 +24,7 @@ export default function AuthLayout({
       <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">{children}</div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // Compact one-line summary used inside lists where MatchCard is too heavy.
 import { Badge } from "@/components/ui/badge";
 import { TeamFlag } from "@/components/teams/team-flag";
+import { TeamTrigger } from "@/components/teams/team-trigger";
 import { cn } from "@/lib/utils";
 
 type MatchStatus = "scheduled" | "locked" | "live" | "finished";
@@ -74,22 +75,32 @@ export function MatchSummary({
         </div>
       </div>
       <div className="flex items-center justify-between gap-2 text-sm font-medium">
-        <span className="flex flex-1 items-center justify-end gap-2 text-right">
-          <span className="truncate">{homeName}</span>
-          {homeCode && (
-            <span className="text-xs text-muted-foreground">{homeCode}</span>
-          )}
-          <TeamFlag url={homeFlagUrl} alt={homeName} size="sm" />
+        <span className="flex flex-1 justify-end">
+          <TeamTrigger
+            code={homeCode}
+            className="flex items-center justify-end gap-2 text-right"
+          >
+            <span className="truncate">{homeName}</span>
+            {homeCode && (
+              <span className="text-xs text-muted-foreground">{homeCode}</span>
+            )}
+            <TeamFlag url={homeFlagUrl} alt={homeName} size="sm" />
+          </TeamTrigger>
         </span>
         <span className="rounded-md bg-secondary px-3 py-1 text-base tabular-nums font-semibold">
           {finished ? `${homeScore ?? "-"} - ${awayScore ?? "-"}` : "vs"}
         </span>
-        <span className="flex flex-1 items-center gap-2">
-          <TeamFlag url={awayFlagUrl} alt={awayName} size="sm" />
-          {awayCode && (
-            <span className="text-xs text-muted-foreground">{awayCode}</span>
-          )}
-          <span className="truncate">{awayName}</span>
+        <span className="flex flex-1">
+          <TeamTrigger
+            code={awayCode}
+            className="flex items-center gap-2"
+          >
+            <TeamFlag url={awayFlagUrl} alt={awayName} size="sm" />
+            {awayCode && (
+              <span className="text-xs text-muted-foreground">{awayCode}</span>
+            )}
+            <span className="truncate">{awayName}</span>
+          </TeamTrigger>
         </span>
       </div>
     </div>

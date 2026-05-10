@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAppAdmin } from "@/lib/auth/require-user";
@@ -7,6 +8,10 @@ import {
   saveResultSchema,
   recalculateMatchSchema,
 } from "@/lib/validations/result-schema";
+
+const clearResultSchema = z.object({
+  match_id: z.string().uuid("Partido inválido."),
+});
 
 export type ResultActionState =
   | { ok: true; message?: string; updatedCount?: number }
@@ -90,5 +95,47 @@ export async function recalculateMatchPointsAction(
     ok: true,
     updatedCount: (count as number) ?? 0,
     message: "Puntos recalculados.",
+  };
+}
+
+export async function clearMatchResultAction(
+  _prev: ResultActionState,
+  formData: FormData,
+): Promise<ResultActionState> {
+  const user = await requireAppAdmin();
+  const parsed = clearResultSchema.safeParse({
+    match_id: formData.get("match_id"),
+  });
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Partido inválido." };
+  }
+
+  const supabase = await createClient();
+
+  const { count: predictionsCount } = await supabase
+    .from("predictions")
+    .select("id", { count: "exact", head: true })
+    .eq("match_id", parsed.data.match_id);
+
+  const { error } = await supabase.rpc("clear_match_result", {
+    p_match_id: parsed.data.match_id,
+    p_caller_id: user.id,
+  });
+
+  if (error) {
+    return { ok: false, error: `No pudimos borrar el resultado: ${error.message}` };
+  }
+
+  revalidatePath("/admin/results");
+  revalidatePath("/partidos");
+  revalidatePath("/dashboard");
+  revalidatePath("/ranking");
+  revalidatePath("/standings");
+  return {
+    ok: true,
+    message:
+      predictionsCount && predictionsCount > 0
+        ? `Resultado borrado (${predictionsCount} pronóstico${predictionsCount === 1 ? "" : "s"} reseteado${predictionsCount === 1 ? "" : "s"}).`
+        : "Resultado borrado. El partido vuelve a Pendientes.",
   };
 }

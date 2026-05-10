@@ -7,6 +7,7 @@ interface HypeCountdownProps {
   startsAt: string;
   className?: string;
   label?: string;
+  size?: "hero" | "compact";
 }
 
 interface Parts {
@@ -56,7 +57,9 @@ export function HypeCountdown({
   startsAt,
   className,
   label = "El Mundial arranca en",
+  size = "hero",
 }: HypeCountdownProps) {
+  const isCompact = size === "compact";
   const [parts, setParts] = useState<Parts | null>(null);
 
   useEffect(() => {
@@ -96,39 +99,71 @@ export function HypeCountdown({
   }, [startsAt]);
 
   return (
-    <div className={cn("space-y-2", className)} suppressHydrationWarning>
-      <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">
-        {label}
-      </p>
-      <div className="flex items-end justify-center gap-1 sm:gap-1.5">
+    <div
+      className={cn(isCompact ? "space-y-1" : "space-y-2", className)}
+      suppressHydrationWarning
+    >
+      {label && (
+        <p
+          className={cn(
+            "text-center font-bold uppercase tracking-[0.3em] opacity-80",
+            isCompact ? "text-[8px]" : "text-[10px]",
+          )}
+        >
+          {label}
+        </p>
+      )}
+      <div
+        className={cn(
+          "flex items-end justify-center",
+          isCompact ? "gap-0.5" : "gap-1 sm:gap-1.5",
+        )}
+      >
         {UNITS.map((u, i) => {
           const isLast = i === UNITS.length - 1;
           const isSeconds = u.key === "seconds";
           const value = parts ? String(parts[u.key]).padStart(2, "0") : "—";
           return (
             <div key={u.key} className="flex items-end">
-              <div className="flex flex-col items-center gap-1">
+              <div className="flex flex-col items-center gap-0.5">
                 <div
                   // Re-key the seconds box on every tick so the scale/opacity
                   // animation restarts and visually "ticks" each second.
                   key={isSeconds && parts ? parts.seconds : undefined}
                   className={cn(
-                    "flex min-w-[2.75rem] items-center justify-center rounded-lg px-2 py-1.5 text-2xl font-extrabold tabular-nums shadow-inner ring-1 backdrop-blur-sm sm:min-w-[3.5rem] sm:text-3xl",
+                    "flex items-center justify-center font-extrabold tabular-nums shadow-inner ring-1 backdrop-blur-sm",
+                    isCompact
+                      ? "min-w-[1.7rem] rounded-md px-1 py-0.5 text-[11px]"
+                      : "min-w-[2.75rem] rounded-lg px-2 py-1.5 text-2xl sm:min-w-[3.5rem] sm:text-3xl",
                     isSeconds
-                      ? "bg-accent/40 text-white ring-accent/50 motion-safe:animate-[tick_700ms_ease-out]"
-                      : "bg-white/15 ring-white/25",
+                      ? isCompact
+                        ? "bg-accent/30 text-accent-foreground ring-accent/40 motion-safe:animate-[tick_700ms_ease-out]"
+                        : "bg-accent/40 text-white ring-accent/50 motion-safe:animate-[tick_700ms_ease-out]"
+                      : isCompact
+                        ? "bg-muted ring-border"
+                        : "bg-white/15 ring-white/25",
                   )}
                 >
                   {value}
                 </div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-70">
+                <span
+                  className={cn(
+                    "font-bold uppercase tracking-[0.15em] opacity-70",
+                    isCompact ? "text-[7px]" : "text-[9px] tracking-[0.2em]",
+                  )}
+                >
                   {u.label}
                 </span>
               </div>
               {!isLast && (
                 <span
                   aria-hidden
-                  className="px-0.5 pb-6 text-2xl font-extrabold opacity-50 sm:px-1 sm:text-3xl"
+                  className={cn(
+                    "font-extrabold opacity-50",
+                    isCompact
+                      ? "px-0.5 pb-3 text-[11px]"
+                      : "px-0.5 pb-6 text-2xl sm:px-1 sm:text-3xl",
+                  )}
                 >
                   :
                 </span>

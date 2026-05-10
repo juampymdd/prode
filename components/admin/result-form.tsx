@@ -8,7 +8,7 @@ import {
   type ResultActionState,
 } from "@/actions/result-actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberStepper } from "@/components/ui/number-stepper";
 
 interface ResultFormProps {
   matchId: string;
@@ -43,30 +43,20 @@ export function ResultForm({
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="match_id" value={matchId} />
-      <Input
+      <NumberStepper
         name="home_score"
-        type="number"
-        min={0}
-        max={30}
-        step={1}
+        defaultValue={defaultHome ?? 0}
+        ariaLabel="goles local"
         required
-        defaultValue={defaultHome ?? ""}
-        className="w-16 text-center text-lg tabular-nums"
-        aria-label="Goles local"
       />
-      <span className="text-muted-foreground">-</span>
-      <Input
+      <span className="font-mono text-muted-foreground">-</span>
+      <NumberStepper
         name="away_score"
-        type="number"
-        min={0}
-        max={30}
-        step={1}
+        defaultValue={defaultAway ?? 0}
+        ariaLabel="goles visitante"
         required
-        defaultValue={defaultAway ?? ""}
-        className="w-16 text-center text-lg tabular-nums"
-        aria-label="Goles visitante"
       />
-      <Button type="submit" size="sm" disabled={isPending}>
+      <Button type="submit" size="sm" disabled={isPending} className="ml-1">
         {isPending ? "Guardando..." : finished ? "Actualizar resultado" : "Cargar resultado"}
       </Button>
     </form>

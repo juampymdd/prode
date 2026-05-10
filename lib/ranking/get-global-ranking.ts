@@ -31,7 +31,8 @@ export async function getGlobalRanking(): Promise<RankingEntry[]> {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("user_id, name, is_app_admin"),
+        .select("user_id, name, is_app_admin")
+        .is("disabled_at", null),
       supabase
         .from("predictions")
         .select("user_id, points, exact_hit, winner_hit"),

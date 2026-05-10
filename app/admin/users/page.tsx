@@ -16,6 +16,7 @@ interface ProfileRow {
   user_id: string;
   name: string | null;
   is_app_admin: boolean;
+  disabled_at: string | null;
   created_at: string;
 }
 
@@ -28,14 +29,16 @@ export default async function AdminUsersPage() {
   const [{ data: profiles }, { data: authList }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("user_id, name, is_app_admin, created_at")
+      .select("user_id, name, is_app_admin, disabled_at, created_at")
       .order("created_at", { ascending: true }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
   ]);
 
   const emailByUserId = new Map<string, string>();
+  const emailConfirmedAtByUserId = new Map<string, string | null>();
   for (const u of authList?.users ?? []) {
     if (u.email) emailByUserId.set(u.id, u.email);
+    emailConfirmedAtByUserId.set(u.id, u.email_confirmed_at ?? null);
   }
 
   const rows: AdminUserRow[] = ((profiles ?? []) as ProfileRow[]).map((p) => ({
@@ -43,6 +46,8 @@ export default async function AdminUsersPage() {
     name: p.name,
     email: emailByUserId.get(p.user_id) ?? null,
     is_app_admin: p.is_app_admin,
+    disabled_at: p.disabled_at,
+    email_confirmed_at: emailConfirmedAtByUserId.get(p.user_id) ?? null,
     created_at: p.created_at,
   }));
 

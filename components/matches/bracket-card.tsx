@@ -1,8 +1,9 @@
 "use client";
 
-import { Star, Lock } from "lucide-react";
+import { Lock, Radio, Star, Target } from "lucide-react";
 import { TeamFlag } from "@/components/teams/team-flag";
-import { Countdown } from "@/components/matches/countdown";
+import { TeamTrigger } from "@/components/teams/team-trigger";
+import { HypeCountdown } from "@/components/matches/hype-countdown";
 import { PredictionForm } from "@/components/matches/prediction-form";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,6 +58,109 @@ function formatShort(iso: string) {
   });
 }
 
+function CardFooterStatus({
+  status,
+  startsAt,
+  closedOnServer,
+}: {
+  status: MatchStatus;
+  startsAt: string;
+  closedOnServer: boolean;
+}) {
+  if (status === "finished") return null;
+
+  if (status === "live") {
+    return (
+      <div className="mt-2 flex items-center justify-center gap-1.5 rounded-md bg-destructive/10 py-1 text-destructive">
+        <Radio className="size-3 animate-pulse" aria-hidden />
+        <span className="text-[10px] font-extrabold uppercase tracking-[0.25em]">
+          En vivo
+        </span>
+      </div>
+    );
+  }
+
+  // Status is `scheduled` or `locked` and not yet started, or `locked` past
+  // kickoff (waiting for result load). The closedOnServer flag is the
+  // canonical "predictions are closed" signal and also covers "match has
+  // started" (starts_at <= now).
+  if (closedOnServer) {
+    return (
+      <p className="mt-2 text-center text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+        Esperando resultado
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2 rounded-md border bg-muted/30 p-1.5">
+      <HypeCountdown startsAt={startsAt} size="compact" label="Faltan" />
+    </div>
+  );
+}
+
+function DialogTeamRow({
+  name,
+  code,
+  flagUrl,
+  label,
+  score,
+  isWinner,
+}: {
+  name: string | null;
+  code: string | null;
+  flagUrl: string | null;
+  label: string | null;
+  score: number | null;
+  isWinner: boolean;
+}) {
+  const known = name != null;
+  return (
+    <TeamTrigger
+      code={code}
+      className={cn(
+        "flex w-full items-center gap-3 px-4 py-3 text-left",
+        isWinner && "bg-success/8",
+      )}
+    >
+      <TeamFlag url={flagUrl} alt={name ?? label ?? "TBD"} size="lg" />
+      <span className="min-w-0 flex-1">
+        {known ? (
+          <span
+            className={cn(
+              "block truncate font-bold leading-tight",
+              isWinner ? "text-success" : "text-foreground",
+            )}
+          >
+            {name}
+          </span>
+        ) : (
+          <span className="block truncate text-sm italic font-medium text-muted-foreground">
+            {label ?? "TBD"}
+          </span>
+        )}
+        {code && (
+          <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            {code}
+          </span>
+        )}
+      </span>
+      {score != null && (
+        <span
+          className={cn(
+            "rounded-md px-3 py-1 text-2xl font-extrabold tabular-nums",
+            isWinner
+              ? "bg-success/15 text-success"
+              : "bg-muted text-foreground/70",
+          )}
+        >
+          {score}
+        </span>
+      )}
+    </TeamTrigger>
+  );
+}
+
 function TeamLine({
   name,
   code,
@@ -78,26 +182,49 @@ function TeamLine({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-1.5",
+        "relative flex items-center justify-between gap-1.5 rounded-md py-0.5 pl-1.5 pr-1 transition-colors",
         small ? "text-[10px]" : "text-xs",
-        winner ? "font-bold text-foreground" : "text-foreground/85",
+        winner && "bg-success/10",
+        !known && "opacity-80",
       )}
     >
+      {/* Winner accent stripe on the left */}
+      {winner && (
+        <span
+          aria-hidden
+          className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-success"
+        />
+      )}
+
       <span className="flex min-w-0 items-center gap-1.5">
         <TeamFlag url={flagUrl} alt={name ?? "TBD"} size="sm" />
-        <span
-          className={cn(
-            "truncate",
-            !known && "italic text-muted-foreground",
-          )}
-        >
-          {known ? (code ?? name) : (label ?? "TBD")}
-        </span>
+        {known ? (
+          <span
+            className={cn(
+              "truncate",
+              winner
+                ? "font-extrabold text-success"
+                : "font-semibold text-foreground/90",
+            )}
+          >
+            {code ?? name}
+          </span>
+        ) : (
+          <span className="truncate text-[10px] font-medium uppercase tracking-wider italic text-muted-foreground/70">
+            {label ?? "TBD"}
+          </span>
+        )}
       </span>
+
       <span
         className={cn(
-          "rounded px-1.5 py-px font-extrabold tabular-nums",
-          score != null ? "bg-secondary text-secondary-foreground" : "text-muted-foreground/60",
+          "shrink-0 rounded font-extrabold tabular-nums",
+          small ? "px-1.5 text-[11px]" : "px-2 py-0.5 text-sm",
+          score != null
+            ? winner
+              ? "bg-success/20 text-success"
+              : "bg-secondary text-secondary-foreground"
+            : "text-muted-foreground/40",
         )}
       >
         {score ?? "—"}
@@ -176,14 +303,11 @@ export function BracketCard({ match, variant = "compact" }: BracketCardProps) {
           small={small}
         />
       </div>
-      {!finished && teamsKnown && !match.closedOnServer && (
-        <Countdown
-          startsAt={match.startsAt}
-          variant="badge"
-          prefix=""
-          className="mt-1 w-full justify-center text-[9px]"
-        />
-      )}
+      <CardFooterStatus
+        status={match.status}
+        startsAt={match.startsAt}
+        closedOnServer={match.closedOnServer}
+      />
       {match.prediction && (
         <p
           className={cn(
@@ -232,48 +356,38 @@ export function BracketCard({ match, variant = "compact" }: BracketCardProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-xl border bg-muted/30 p-4">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <div className="flex flex-col items-center gap-1.5 text-center">
-              <TeamFlag
-                url={match.homeFlagUrl}
-                alt={match.homeName ?? "TBD"}
-                size="lg"
-              />
-              <p className="font-bold text-sm leading-tight">
-                {match.homeName ?? (
-                  <span className="italic text-muted-foreground">
-                    {match.homeLabel ?? "TBD"}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="text-center">
-              {finished ? (
-                <p className="text-2xl font-extrabold tabular-nums">
-                  {match.homeScore} - {match.awayScore}
-                </p>
-              ) : (
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  vs
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-center gap-1.5 text-center">
-              <TeamFlag
-                url={match.awayFlagUrl}
-                alt={match.awayName ?? "TBD"}
-                size="lg"
-              />
-              <p className="font-bold text-sm leading-tight">
-                {match.awayName ?? (
-                  <span className="italic text-muted-foreground">
-                    {match.awayLabel ?? "TBD"}
-                  </span>
-                )}
-              </p>
-            </div>
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+          <DialogTeamRow
+            name={match.homeName}
+            code={match.homeCode}
+            flagUrl={match.homeFlagUrl}
+            label={match.homeLabel}
+            score={finished ? match.homeScore : null}
+            isWinner={homeWinner}
+          />
+
+          <div className="relative flex items-center justify-center bg-muted/40 py-2">
+            <span aria-hidden className="absolute inset-x-6 top-1/2 h-px bg-border" />
+            {finished ? (
+              <span className="relative rounded-full border bg-background px-4 py-1 text-base font-extrabold tabular-nums shadow-sm">
+                {match.homeScore} <span className="text-muted-foreground">-</span>{" "}
+                {match.awayScore}
+              </span>
+            ) : (
+              <span className="relative rounded-full border bg-background px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground shadow-sm">
+                vs
+              </span>
+            )}
           </div>
+
+          <DialogTeamRow
+            name={match.awayName}
+            code={match.awayCode}
+            flagUrl={match.awayFlagUrl}
+            label={match.awayLabel}
+            score={finished ? match.awayScore : null}
+            isWinner={awayWinner}
+          />
         </div>
 
         {!teamsKnown ? (
@@ -316,11 +430,14 @@ export function BracketCard({ match, variant = "compact" }: BracketCardProps) {
                   : "border-border bg-muted/40 text-muted-foreground",
             )}
           >
-            {match.prediction.exactHit
-              ? `🎯 ¡Exacto! Sumaste ${match.prediction.points} puntos.`
-              : match.prediction.winnerHit
-                ? `Ganador correcto · +${match.prediction.points} pts`
-                : `+${match.prediction.points} puntos`}
+            {match.prediction.exactHit ? (
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <Target className="size-4" aria-hidden />
+                ¡Exacto! Sumaste {match.prediction.points} puntos.
+              </span>
+            ) : match.prediction.winnerHit
+              ? `Ganador correcto · +${match.prediction.points} pts`
+              : `+${match.prediction.points} puntos`}
           </div>
         )}
       </DialogContent>

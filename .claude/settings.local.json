@@ -27,7 +27,27 @@
       "Bash(git remote *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(node /Users/juanpablomaddoni/Documents/projects/prode/scripts/admin-link.mjs juampymdd@gmail.com)"
+      "Bash(node /Users/juanpablomaddoni/Documents/projects/prode/scripts/admin-link.mjs juampymdd@gmail.com)",
+      "Bash(npx tsc *)",
+      "Bash(xargs ls -la)",
+      "Bash(curl -s -o /tmp/terminos.html -w \"HTTP %{http_code} · %{size_download} bytes · ct=%{content_type}\\\\n\" http://localhost:3000/terminos && curl -s -o /tmp/terminos.pdf -w \"HTTP %{http_code} · %{size_download} bytes · ct=%{content_type}\\\\n\" http://localhost:3000/terminos/pdf && file /tmp/terminos.pdf)",
+      "Read(//tmp/**)",
+      "Bash(until grep *)",
+      "Read(//private/tmp/**)",
+      "Bash(npx supabase *)",
+      "Bash(grep -iE \"^\\(ban|circle-check|check-circle|user-x|user-check\\)\\\\.js$\")",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)",
+      "WebFetch(domain:reactbits.dev)",
+      "Bash(gh api *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"console.log\\(require\\('sharp'\\).versions\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(bun test *)",
+      "Bash(grep -rn '\"/tablas\"\\\\|\"/tablas$\\\\|`/tablas' --include=\"*.tsx\" --include=\"*.ts\" --exclude-dir=node_modules --exclude-dir=.next /Users/juanpablomaddoni/Documents/projects/prode)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

@@ -26,6 +26,19 @@ export async function upsertPredictionAction(
   }
 
   const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("disabled_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profile?.disabled_at) {
+    return {
+      ok: false,
+      error: "Tu cuenta está deshabilitada. No podés cargar pronósticos.",
+    };
+  }
+
   const { data: match, error: mErr } = await supabase
     .from("matches")
     .select("id, starts_at, status, home_team_id, away_team_id")

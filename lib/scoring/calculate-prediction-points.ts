@@ -25,7 +25,6 @@ function outcome(home: number, away: number): Outcome {
  *   - Exact result: 5 points (terminal).
  *   - Correct winner / correct draw: 3 points.
  *   - Correct goal difference: 2 points.
- *   - Each team's score matched: +1 point.
  *   - Floors at 0; never returns negative points.
  */
 export function calculatePredictionPoints(
@@ -46,8 +45,6 @@ export function calculatePredictionPoints(
   let points = 0;
   if (winnerHit) points += 3;
   if (ph - pa === ah - aa) points += 2;
-  if (ph === ah) points += 1;
-  if (pa === aa) points += 1;
 
   return {
     points: Math.max(0, points),

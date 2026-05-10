@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, ListChecks, Trophy } from "lucide-react";
-import { getUserWithProfile } from "@/lib/auth/get-user";
+import { ArrowRight, Ban, Hand, ListChecks, Trophy } from "lucide-react";
+import { getUserWithProfile, isProfileDisabled } from "@/lib/auth/get-user";
 import { createClient } from "@/lib/supabase/server";
 import { getGlobalRanking } from "@/lib/ranking/get-global-ranking";
 import { Button } from "@/components/ui/button";
@@ -54,8 +54,27 @@ export default async function DashboardPage() {
   const hasResults = ranking.some((r) => r.totalPoints > 0);
   const nextKickoff = upcoming[0]?.starts_at ?? null;
 
+  const accountDisabled = isProfileDisabled(profile);
+
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:py-8">
+      {accountDisabled && (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          <Ban className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <div>
+            <p className="font-semibold">Tu cuenta está deshabilitada.</p>
+            <p className="text-destructive/80">
+              Podés mirar partidos y resultados, pero no cargar ni editar
+              pronósticos. Tampoco aparecés en el ranking. Hablá con un admin
+              para reactivarla.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <section className="overflow-hidden rounded-3xl border bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-xl sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -63,8 +82,9 @@ export default async function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">
               Mundial 2026
             </p>
-            <h1 className="text-2xl font-extrabold leading-tight sm:text-3xl">
-              Hola{profile?.name ? `, ${profile.name}` : ""} 👋
+            <h1 className="flex items-center gap-2 text-2xl font-extrabold leading-tight sm:text-3xl">
+              <span>Hola{profile?.name ? `, ${profile.name}` : ""}</span>
+              <Hand className="size-6 sm:size-7" aria-hidden />
             </h1>
             <p className="text-sm opacity-90">
               Tu pronóstico, tus puntos, tu lugar en el ranking.
@@ -134,7 +154,10 @@ export default async function DashboardPage() {
       {/* Top 3 podium */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">🏆 Top 3</h2>
+          <h2 className="flex items-center gap-2 text-lg font-bold">
+            <Trophy className="size-5 text-gold" aria-hidden />
+            Top 3
+          </h2>
           <Button asChild variant="ghost" size="sm">
             <Link href="/ranking">
               Ver tabla
