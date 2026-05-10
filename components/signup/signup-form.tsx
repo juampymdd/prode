@@ -49,6 +49,23 @@ export function SignupForm() {
 
   return (
     <form action={formAction} className="grid gap-5">
+      {/* Honeypot: hidden from humans, irresistible to bots. Server treats
+          any non-empty value as a bot submission and silently drops it. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden"
+      >
+        <label htmlFor="hp_url">No completar este campo</label>
+        <input
+          id="hp_url"
+          name="hp_url"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          defaultValue=""
+        />
+      </div>
+
       <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
         <Input

@@ -83,7 +83,7 @@ export default async function StandingsPage() {
         {!user && (
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button asChild>
-              <Link href="/login">
+              <Link href="/signup">
                 Sumarme al prode
                 <ArrowRight className="size-4" aria-hidden />
               </Link>

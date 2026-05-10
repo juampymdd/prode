@@ -50,7 +50,7 @@ export function HeroSection() {
 
         <div className="mt-10 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
           <Button asChild size="lg" variant="secondary" className="font-semibold">
-            <Link href="/login">
+            <Link href="/signup">
               Sumarme al prode
               <ArrowRight className="size-4" aria-hidden />
             </Link>

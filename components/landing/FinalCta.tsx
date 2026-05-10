@@ -30,7 +30,7 @@ export function FinalCta() {
             variant="secondary"
             className="font-semibold"
           >
-            <Link href="/login">
+            <Link href="/signup">
               Sumarme al prode
               <ArrowRight className="size-4" aria-hidden />
             </Link>

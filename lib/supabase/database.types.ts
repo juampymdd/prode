@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -419,4 +418,11 @@ export const Constants = {
     Enums: {},
   },
 } as const
-<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
+
+
+// ----------------------------------------------------------------------
+// Hand-maintained convenience types for places where the generated row
+// shape is too loose. The matches.status CHECK constraint enforces these
+// at the DB layer; mirror them here so app code is exhaustive-checkable.
+
+export type MatchStatus = "scheduled" | "locked" | "live" | "finished";

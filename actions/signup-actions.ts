@@ -2,16 +2,33 @@
 
 import { signupRequestSchema } from "@/lib/validations/signup-schema";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { clientIp, throttle } from "@/lib/security/throttle";
 
 export type SignupActionState =
   | { ok: true; message: string }
   | { ok: false; error: string }
   | undefined;
 
+// Same response regardless of whether the email is new, pending, approved
+// or rejected. Prevents account / state enumeration from the public form.
+const GENERIC_SUCCESS: SignupActionState = {
+  ok: true,
+  message:
+    "Recibimos tu solicitud. Si todo da, un admin te aprueba y te llega un mail con el link para entrar.",
+};
+
 export async function createSignupRequestAction(
   _prev: SignupActionState,
   formData: FormData,
 ): Promise<SignupActionState> {
+  // Honeypot: a hidden input filled in by bots, ignored by humans. If it
+  // arrives non-empty, return the generic success without writing to the DB
+  // so the bot doesn't learn the field name is the tell.
+  const hp = (formData.get("hp_url") ?? "").toString().trim();
+  if (hp.length > 0) {
+    return GENERIC_SUCCESS;
+  }
+
   const parsed = signupRequestSchema.safeParse({
     email: formData.get("email"),
     fullName: formData.get("fullName"),
@@ -25,9 +42,15 @@ export async function createSignupRequestAction(
     };
   }
 
-  // Admin client bypasses RLS so we can both check duplicates AND insert
-  // the row from a public (anon) form. Safe because this server action is
-  // the only entry point and we've already validated input.
+  const ip = await clientIp();
+  const gate = await throttle("signup", ip);
+  if (!gate.allowed) {
+    return {
+      ok: false,
+      error: "Demasiados intentos. Esperá unos minutos antes de pedir acceso de nuevo.",
+    };
+  }
+
   const admin = createAdminClient();
   const email = parsed.data.email;
 
@@ -38,29 +61,15 @@ export async function createSignupRequestAction(
     .maybeSingle();
 
   if (lookupError) {
-    console.error("[createSignupRequestAction] lookup failed", lookupError);
+    console.error("[createSignupRequestAction] lookup failed", { code: lookupError.code });
     return { ok: false, error: "No pudimos procesar tu solicitud. Probá de nuevo." };
   }
 
+  // If a row already exists in any state, respond identically to a fresh
+  // insert. The admin sees duplicates in the queue; the user gets one
+  // honest message regardless.
   if (existing) {
-    if (existing.status === "pending") {
-      return {
-        ok: false,
-        error: "Ya hay una solicitud pendiente con ese email. Esperá la respuesta del admin.",
-      };
-    }
-    if (existing.status === "approved") {
-      return {
-        ok: false,
-        error: "Ya tenés una cuenta aprobada con ese email. Andá a /login.",
-      };
-    }
-    if (existing.status === "rejected") {
-      return {
-        ok: false,
-        error: "Tu solicitud fue rechazada. Contactá al admin si pensás que es un error.",
-      };
-    }
+    return GENERIC_SUCCESS;
   }
 
   const { error: insertError } = await admin.from("signup_requests").insert({
@@ -71,16 +80,12 @@ export async function createSignupRequestAction(
   });
 
   if (insertError) {
-    console.error("[createSignupRequestAction] insert failed", insertError);
+    console.error("[createSignupRequestAction] insert failed", { code: insertError.code });
     return {
       ok: false,
       error: "No pudimos registrar tu solicitud. Probá de nuevo.",
     };
   }
 
-  return {
-    ok: true,
-    message:
-      "Tu solicitud quedó pendiente. Te avisamos por mail cuando un admin la apruebe.",
-  };
+  return GENERIC_SUCCESS;
 }

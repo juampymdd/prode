@@ -1,15 +1,15 @@
 "use server";
 
 import { z } from "zod";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { onboardingSchema } from "@/lib/validations/profile-schema";
+import { trustedOrigin } from "@/lib/security/origin";
+import { clientIp, throttle } from "@/lib/security/throttle";
 
 const emailSchema = z.object({
-  email: z.string().trim().email("Email inválido."),
+  email: z.string().trim().toLowerCase().email("Email inválido."),
   next: z
     .string()
     .optional()
@@ -21,11 +21,13 @@ export type AuthState =
   | { ok: false; error: string }
   | undefined;
 
-async function originFromHeaders() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
+// Identical response for every non-success path on the public form, so an
+// attacker can't tell pending / rejected / unknown email apart.
+function genericResponse(email: string): AuthState {
+  return {
+    ok: true,
+    message: `Si esa cuenta existe, te mandamos un link mágico a ${email}. Revisá tu bandeja y el spam.`,
+  };
 }
 
 export async function sendMagicLinkAction(
@@ -40,34 +42,47 @@ export async function sendMagicLinkAction(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
   }
 
-  const supabase = await createClient();
-  const origin = await originFromHeaders();
-  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(parsed.data.next!)}`;
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email: parsed.data.email,
-    options: { emailRedirectTo: redirectTo },
-  });
-
-  if (error) {
-    console.error("[sendMagicLinkAction] supabase error", {
-      code: error.code,
-      status: error.status,
-      message: error.message,
-    });
-    if (error.status === 429) {
-      return {
-        ok: false,
-        error: "Mandaste demasiados links en poco tiempo. Probá de nuevo en unos minutos.",
-      };
-    }
-    return { ok: false, error: "No pudimos enviar el link. Intentá de nuevo." };
+  const ip = await clientIp();
+  const gate = await throttle("magic_link", ip);
+  if (!gate.allowed) {
+    return {
+      ok: false,
+      error: "Demasiados intentos. Esperá unos minutos antes de pedir otro link.",
+    };
   }
 
-  return {
-    ok: true,
-    message: `Te mandamos un link mágico a ${parsed.data.email}. Abrílo y entrás directo.`,
-  };
+  const supabase = await createClient();
+  const origin = await trustedOrigin();
+  const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(parsed.data.next!)}`;
+  const email = parsed.data.email;
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectTo, shouldCreateUser: false },
+  });
+
+  if (!error) {
+    return {
+      ok: true,
+      message: `Te mandamos un link mágico a ${email}. Abrílo y entrás directo.`,
+    };
+  }
+
+  console.error("[sendMagicLinkAction] supabase error", {
+    code: error.code,
+    status: error.status,
+  });
+
+  if (error.status === 429) {
+    return {
+      ok: false,
+      error: "Mandaste demasiados links en poco tiempo. Probá de nuevo en unos minutos.",
+    };
+  }
+
+  // Any other failure (unknown email, signups disabled, otp_disabled, etc.)
+  // gets the same generic response to prevent account / signup enumeration.
+  return genericResponse(email);
 }
 
 export async function completeOnboardingAction(
@@ -102,10 +117,7 @@ export async function completeOnboardingAction(
     .eq("user_id", user.id);
 
   if (error) {
-    console.error("[completeOnboardingAction] supabase error", {
-      code: error.code,
-      message: error.message,
-    });
+    console.error("[completeOnboardingAction] update failed", { code: error.code });
     return { ok: false, error: "No pudimos guardar tus datos. Intentá de nuevo." };
   }
 
@@ -119,7 +131,7 @@ export async function completeOnboardingAction(
   });
   if (metaError) {
     console.warn("[completeOnboardingAction] could not sync user_metadata", {
-      message: metaError.message,
+      code: metaError.code,
     });
   }
 

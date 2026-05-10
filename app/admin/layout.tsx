@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, Shield, Users, Flag } from "lucide-react";
+import { ChevronLeft, Flag, Shield, UserPlus, Users } from "lucide-react";
 import { requireAppAdmin } from "@/lib/auth/require-user";
 import { Header } from "@/components/layout/header";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -30,7 +30,13 @@ export default async function AdminLayout({
                 <Shield className="mr-1 inline size-3" />
                 Admin
               </span>
-              <span className="ml-auto flex items-center gap-1">
+              <span className="ml-auto flex flex-wrap items-center gap-1">
+                <Button asChild variant="secondary" size="sm">
+                  <Link href="/admin/signup-requests">
+                    <UserPlus className="size-4" />
+                    Solicitudes
+                  </Link>
+                </Button>
                 <Button asChild variant="secondary" size="sm">
                   <Link href="/admin/users">
                     <Users className="size-4" />
