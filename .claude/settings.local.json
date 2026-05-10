@@ -1,7 +1,33 @@
 {
   "permissions": {
     "allow": [
-      "Bash(bun create *)"
+      "Bash(bun create *)",
+      "Bash(git checkout *)",
+      "Bash(bun add *)",
+      "Bash(bun run *)",
+      "Bash(git check-ignore *)",
+      "Bash(curl -s -o /dev/null -w \"REST API: %{http_code}\\\\n\" \"https://qudsgmfwmqcexgvuulrd.supabase.co/rest/v1/\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1ZHNnbWZ3bXFjZXhndnV1bHJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNDUzNDEsImV4cCI6MjA5MzgyMTM0MX0.A9HuLLAN_s5Mr0cFgzNwZOYvbIM0mz8bS4GhYEQOZDY\")",
+      "Bash(supabase --version)",
+      "Bash(curl *)",
+      "Bash(bun pm *)",
+      "Bash(bunx supabase *)",
+      "Bash(bun dev *)",
+      "Bash(kill 60733)",
+      "Bash(lsof -i :3000 -sTCP:LISTEN)",
+      "Bash(lsof -i :3001 -sTCP:LISTEN)",
+      "Bash(git mv *)",
+      "Bash(kill 62643)",
+      "Bash(kill 82744 82745 82769)",
+      "Bash(lsof -nP -iTCP:3000)",
+      "Bash(kill -9 5776)",
+      "Bash(ps -p 11662 -o pid,ppid,etime,command)",
+      "Bash(node scripts/dev-prestart.mjs)",
+      "Bash(echo \"---exit $?---\")",
+      "Bash(node /Users/juanpablomaddoni/Documents/projects/prode/scripts/dev-prestart.mjs)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(node /Users/juanpablomaddoni/Documents/projects/prode/scripts/admin-link.mjs juampymdd@gmail.com)"
     ]
   }
 }
