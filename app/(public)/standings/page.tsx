@@ -89,7 +89,7 @@ export default async function StandingsPage() {
               </Link>
             </Button>
             <Button asChild variant="ghost">
-              <Link href="/">Volver a la landing</Link>
+              <Link href="/">Volver al inicio</Link>
             </Button>
           </div>
         )}

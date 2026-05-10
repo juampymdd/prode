@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import type { MatchStatus } from "@/lib/supabase/database.types";
+
+type MatchStatus = "scheduled" | "locked" | "live" | "finished";
 
 export interface TeamMatchRow {
   id: string;

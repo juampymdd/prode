@@ -41,22 +41,22 @@ export type Database = {
     Tables: {
       auth_throttle: {
         Row: {
-          id: number
-          scope: string
-          ip: string
           created_at: string
+          id: number
+          ip: string
+          scope: string
         }
         Insert: {
-          id?: number
-          scope: string
-          ip: string
           created_at?: string
+          id?: number
+          ip: string
+          scope: string
         }
         Update: {
-          id?: number
-          scope?: string
-          ip?: string
           created_at?: string
+          id?: number
+          ip?: string
+          scope?: string
         }
         Relationships: []
       }
@@ -295,26 +295,23 @@ export type Database = {
       }
     }
     Functions: {
-      clear_match_result: {
-        Args: { p_match_id: string }
-        Returns: undefined
+      clear_match_result: { Args: { p_match_id: string }; Returns: undefined }
+      get_global_ranking: {
+        Args: never
+        Returns: {
+          exact_hits: number
+          is_app_admin: boolean
+          name: string
+          predictions_count: number
+          total_points: number
+          user_id: string
+          winner_hits: number
+        }[]
       }
       is_app_admin: { Args: { p_user_id: string }; Returns: boolean }
       recalculate_match_points: {
         Args: { p_match_id: string }
         Returns: number
-      }
-      get_global_ranking: {
-        Args: Record<string, never>
-        Returns: {
-          user_id: string
-          name: string | null
-          is_app_admin: boolean
-          total_points: number
-          exact_hits: number
-          winner_hits: number
-          predictions_count: number
-        }[]
       }
     }
     Enums: {
@@ -452,10 +449,5 @@ export const Constants = {
   },
 } as const
 
-
-// ----------------------------------------------------------------------
-// Hand-maintained convenience types for places where the generated row
-// shape is too loose. The matches.status CHECK constraint enforces these
-// at the DB layer; mirror them here so app code is exhaustive-checkable.
 
 export type MatchStatus = "scheduled" | "locked" | "live" | "finished";

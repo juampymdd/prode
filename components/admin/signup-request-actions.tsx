@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { Check, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -56,18 +56,19 @@ interface RejectButtonProps {
 
 export function RejectButton({ id }: RejectButtonProps) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, isPending] = useActionState<
-    SignupAdminState,
-    FormData
-  >(rejectSignupRequestAction, undefined);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!state) return;
-    if (state.ok) {
-      toast.success(state.message);
-      setOpen(false);
-    } else toast.error(state.error);
-  }, [state]);
+  const handleAction = (formData: FormData) => {
+    startTransition(async () => {
+      const result = await rejectSignupRequestAction(undefined, formData);
+      if (result?.ok) {
+        toast.success(result.message);
+        setOpen(false);
+      } else {
+        toast.error(result?.error ?? "No pudimos rechazar la solicitud.");
+      }
+    });
+  };
 
   if (!open) {
     return (
@@ -84,7 +85,7 @@ export function RejectButton({ id }: RejectButtonProps) {
   }
 
   return (
-    <form action={formAction} className="flex items-center gap-2">
+    <form action={handleAction} className="flex items-center gap-2">
       <input type="hidden" name="id" value={id} />
       <Input
         name="reason"

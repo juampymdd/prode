@@ -2,33 +2,29 @@
 
 import dynamic from "next/dynamic";
 
-// Heavy WebGL component — load only on the client.
-const FloatingLines = dynamic(
-  () => import("./floating-lines/FloatingLines"),
-  { ssr: false },
-);
-
-// Module-scope constants so the FloatingLines effect deps stay stable
-// across re-renders (otherwise the WebGL context tears down each tick).
-const LINES_GRADIENT = ["#fef3c7", "#fbbf24", "#ffffff"];
-const ENABLED_WAVES: Array<"top" | "middle" | "bottom"> = [
-  "top",
-  "middle",
-  "bottom",
-];
+// Heavy WebGL — load only on the client to keep the hero's first paint cheap.
+const Grainient = dynamic(() => import("./grainient/Grainient"), {
+  ssr: false,
+});
 
 export function HeroBackground() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      <FloatingLines
-        linesGradient={LINES_GRADIENT}
-        enabledWaves={ENABLED_WAVES}
-        lineCount={6}
-        animationSpeed={0.6}
-        interactive
-        parallax
-        parallaxStrength={0.15}
-        mixBlendMode="screen"
+      <Grainient
+        // Brand palette: deep ocean blue ↔ mid-blue ↔ gold accent.
+        color1="#0E1A4F"
+        color2="#3A5BB8"
+        color3="#F2C76A"
+        zoom={1.05}
+        timeSpeed={0.18}
+        warpStrength={1.1}
+        warpSpeed={1.4}
+        warpAmplitude={45}
+        blendSoftness={0.12}
+        grainAmount={0.08}
+        grainAnimated
+        contrast={1.35}
+        saturation={1.05}
       />
     </div>
   );

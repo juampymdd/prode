@@ -41,7 +41,7 @@ export function SignupForm() {
           va a llegar un mail con un link para entrar al prode.
         </p>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/">Volver a la landing</Link>
+          <Link href="/">Volver al inicio</Link>
         </Button>
       </div>
     );
