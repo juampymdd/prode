@@ -11,72 +11,37 @@ export interface RankingEntry {
   predictionsCount: number;
 }
 
-interface ProfileRow {
+interface RpcRow {
   user_id: string;
   name: string | null;
   is_app_admin: boolean;
+  total_points: number;
+  exact_hits: number;
+  winner_hits: number;
+  predictions_count: number;
 }
 
-interface PredictionRow {
-  user_id: string;
-  points: number;
-  exact_hit: boolean;
-  winner_hit: boolean;
-}
-
+// Backed by the public.get_global_ranking() RPC (SECURITY DEFINER) so the
+// leaderboard stays accurate regardless of per-prediction RLS, while
+// individual prediction rows remain hidden from rival players until kickoff.
 export async function getGlobalRanking(): Promise<RankingEntry[]> {
   const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_global_ranking");
 
-  const [{ data: profiles, error: profilesError }, { data: predictions, error: predsError }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("user_id, name, is_app_admin")
-        .is("disabled_at", null),
-      supabase
-        .from("predictions")
-        .select("user_id, points, exact_hit, winner_hit"),
-    ]);
-
-  if (profilesError) {
-    console.error("[ranking] profiles query failed", profilesError);
-    throw new Error(`No pudimos cargar el ranking: ${profilesError.message}`);
-  }
-  if (predsError) {
-    console.error("[ranking] predictions query failed", predsError);
-    throw new Error(`No pudimos cargar el ranking: ${predsError.message}`);
+  if (error) {
+    console.error("[ranking] rpc failed", { code: error.code });
+    throw new Error("No pudimos cargar el ranking.");
   }
 
-  const stats = new Map<
-    string,
-    { points: number; exact: number; winner: number; count: number }
-  >();
-  for (const p of (predictions ?? []) as PredictionRow[]) {
-    const cur = stats.get(p.user_id) ?? { points: 0, exact: 0, winner: 0, count: 0 };
-    cur.points += p.points ?? 0;
-    if (p.exact_hit) cur.exact += 1;
-    if (p.winner_hit) cur.winner += 1;
-    cur.count += 1;
-    stats.set(p.user_id, cur);
-  }
-
-  const rows = ((profiles ?? []) as ProfileRow[]).map((profile) => {
-    const s = stats.get(profile.user_id) ?? {
-      points: 0,
-      exact: 0,
-      winner: 0,
-      count: 0,
-    };
-    return {
-      userId: profile.user_id,
-      name: profile.name ?? "Jugador",
-      isAdmin: profile.is_app_admin,
-      totalPoints: s.points,
-      exactHits: s.exact,
-      winnerHits: s.winner,
-      predictionsCount: s.count,
-    };
-  });
+  const rows = ((data ?? []) as RpcRow[]).map((r) => ({
+    userId: r.user_id,
+    name: r.name ?? "Jugador",
+    isAdmin: r.is_app_admin,
+    totalPoints: r.total_points,
+    exactHits: r.exact_hits,
+    winnerHits: r.winner_hits,
+    predictionsCount: r.predictions_count,
+  }));
 
   rows.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;

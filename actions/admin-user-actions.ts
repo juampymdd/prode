@@ -1,11 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAppAdmin } from "@/lib/auth/require-user";
+import { trustedOrigin } from "@/lib/security/origin";
 
 const inviteSchema = z.object({
   email: z.string().trim().email("Email inválido."),
@@ -29,13 +29,6 @@ export type AdminUserActionState =
   | { ok: false; error: string }
   | undefined;
 
-async function originFromHeaders() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
-
 export async function inviteUserByMagicLinkAction(
   _prev: AdminUserActionState,
   formData: FormData,
@@ -48,7 +41,7 @@ export async function inviteUserByMagicLinkAction(
   }
 
   const supabase = await createClient();
-  const origin = await originFromHeaders();
+  const origin = await trustedOrigin();
   const redirectTo = `${origin}/auth/callback?next=/dashboard`;
 
   const { error } = await supabase.auth.signInWithOtp({
@@ -168,7 +161,7 @@ export async function resendInviteAction(
   }
 
   const supabase = await createClient();
-  const origin = await originFromHeaders();
+  const origin = await trustedOrigin();
   const redirectTo = `${origin}/auth/callback?next=/dashboard`;
 
   const { error } = await supabase.auth.signInWithOtp({

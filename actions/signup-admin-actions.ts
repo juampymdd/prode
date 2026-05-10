@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAppAdmin } from "@/lib/auth/require-user";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { trustedOrigin } from "@/lib/security/origin";
 
 export type SignupAdminState =
   | { ok: true; message: string }
@@ -15,13 +15,6 @@ const idSchema = z.object({ id: z.string().uuid("Solicitud inválida.") });
 const rejectSchema = idSchema.extend({
   reason: z.string().trim().max(280).optional().nullable(),
 });
-
-async function originFromHeaders() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
 
 /**
  * Approve a pending signup request:
@@ -55,7 +48,7 @@ export async function approveSignupRequestAction(
     return { ok: false, error: "Esta solicitud ya estaba aprobada." };
   }
 
-  const origin = await originFromHeaders();
+  const origin = await trustedOrigin();
   const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent("/dashboard")}`;
 
   const { data: invited, error: inviteError } =

@@ -44,7 +44,10 @@
       "Bash(node -e \"console.log\\(require\\('sharp'\\).versions\\)\")",
       "Bash(node -e ' *)",
       "Bash(bun test *)",
-      "Bash(grep -rn '\"/tablas\"\\\\|\"/tablas$\\\\|`/tablas' --include=\"*.tsx\" --include=\"*.ts\" --exclude-dir=node_modules --exclude-dir=.next /Users/juanpablomaddoni/Documents/projects/prode)"
+      "Bash(grep -rn '\"/tablas\"\\\\|\"/tablas$\\\\|`/tablas' --include=\"*.tsx\" --include=\"*.ts\" --exclude-dir=node_modules --exclude-dir=.next /Users/juanpablomaddoni/Documents/projects/prode)",
+      "Bash(git restore *)",
+      "Bash(python3 -c \"import sys, json; [print\\(x['name'], '->', x['download_url']\\) for x in json.load\\(sys.stdin\\)]\")",
+      "Bash(python3 -c \"import sys, json; d=json.load\\(sys.stdin\\); [print\\(x['name'], '->', x['download_url']\\) for x in d] if isinstance\\(d, list\\) else print\\('not list:', d\\)\")"
     ],
     "additionalDirectories": [
       "/tmp"

@@ -22,7 +22,7 @@ export async function saveMatchResultAction(
   _prev: ResultActionState,
   formData: FormData,
 ): Promise<ResultActionState> {
-  const user = await requireAppAdmin();
+  await requireAppAdmin();
 
   const parsed = saveResultSchema.safeParse({
     match_id: formData.get("match_id"),
@@ -49,7 +49,7 @@ export async function saveMatchResultAction(
 
   const { data: count, error: rpcErr } = await supabase.rpc(
     "recalculate_match_points",
-    { p_match_id: parsed.data.match_id, p_caller_id: user.id },
+    { p_match_id: parsed.data.match_id },
   );
 
   if (rpcErr) {
@@ -75,7 +75,7 @@ export async function recalculateMatchPointsAction(
   _prev: ResultActionState,
   formData: FormData,
 ): Promise<ResultActionState> {
-  const user = await requireAppAdmin();
+  await requireAppAdmin();
   const parsed = recalculateMatchSchema.safeParse({
     match_id: formData.get("match_id"),
   });
@@ -84,7 +84,6 @@ export async function recalculateMatchPointsAction(
   const supabase = await createClient();
   const { data: count, error } = await supabase.rpc("recalculate_match_points", {
     p_match_id: parsed.data.match_id,
-    p_caller_id: user.id,
   });
   if (error) return { ok: false, error: "Falló el recálculo." };
 
@@ -102,7 +101,7 @@ export async function clearMatchResultAction(
   _prev: ResultActionState,
   formData: FormData,
 ): Promise<ResultActionState> {
-  const user = await requireAppAdmin();
+  await requireAppAdmin();
   const parsed = clearResultSchema.safeParse({
     match_id: formData.get("match_id"),
   });
@@ -119,7 +118,6 @@ export async function clearMatchResultAction(
 
   const { error } = await supabase.rpc("clear_match_result", {
     p_match_id: parsed.data.match_id,
-    p_caller_id: user.id,
   });
 
   if (error) {

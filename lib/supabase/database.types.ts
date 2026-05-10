@@ -39,6 +39,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_throttle: {
+        Row: {
+          id: number
+          scope: string
+          ip: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          scope: string
+          ip: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          scope?: string
+          ip?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           away_label: string | null
@@ -275,13 +296,25 @@ export type Database = {
     }
     Functions: {
       clear_match_result: {
-        Args: { p_caller_id: string; p_match_id: string }
+        Args: { p_match_id: string }
         Returns: undefined
       }
       is_app_admin: { Args: { p_user_id: string }; Returns: boolean }
       recalculate_match_points: {
-        Args: { p_caller_id: string; p_match_id: string }
+        Args: { p_match_id: string }
         Returns: number
+      }
+      get_global_ranking: {
+        Args: Record<string, never>
+        Returns: {
+          user_id: string
+          name: string | null
+          is_app_admin: boolean
+          total_points: number
+          exact_hits: number
+          winner_hits: number
+          predictions_count: number
+        }[]
       }
     }
     Enums: {

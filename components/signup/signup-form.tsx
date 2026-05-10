@@ -53,7 +53,8 @@ export function SignupForm() {
           any non-empty value as a bot submission and silently drops it. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden"
+        className="pointer-events-none overflow-hidden"
+        style={{ position: "absolute", left: "-9999px", width: 0, height: 0 }}
       >
         <label htmlFor="hp_url">No completar este campo</label>
         <input

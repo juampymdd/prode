@@ -32,39 +32,41 @@ export interface MatchCardProps {
   children?: React.ReactNode;
 }
 
-function formatDateParts(iso: string) {
+function formatHeader(iso: string) {
   try {
     const d = new Date(iso);
-    const date = d.toLocaleDateString("es-AR", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    });
+    const weekday = d
+      .toLocaleDateString("es-AR", { weekday: "short" })
+      .replace(/\.$/, "");
+    const month = d
+      .toLocaleDateString("es-AR", { month: "short" })
+      .replace(/\.$/, "");
+    const day = d.getDate();
     const time = d.toLocaleTimeString("es-AR", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
     });
-    return { date, time };
+    return `${weekday} ${day} ${month} · ${time}`;
   } catch {
-    return { date: iso, time: "" };
+    return iso;
   }
 }
 
-function statusBadge(status: MatchStatus) {
-  switch (status) {
-    case "live":
-      return (
-        <Badge variant="destructive" className="animate-pulse">
-          ● EN VIVO
-        </Badge>
-      );
-    case "finished":
-      return <Badge variant="success">Finalizado</Badge>;
-    case "locked":
-      return <Badge variant="secondary">Cerrado</Badge>;
-    default:
-      return <Badge variant="outline">Programado</Badge>;
+// Only renders a badge for *exceptional* states. Scheduled is the default
+// and adds noise, so we let the countdown speak for it instead.
+function exceptionalStatusBadge(status: MatchStatus) {
+  if (status === "live") {
+    return (
+      <Badge variant="destructive" className="animate-pulse">
+        ● EN VIVO
+      </Badge>
+    );
   }
+  if (status === "finished") {
+    return <Badge variant="success">Final</Badge>;
+  }
+  return null;
 }
 
 export function MatchCard({
@@ -86,7 +88,8 @@ export function MatchCard({
   children,
 }: MatchCardProps) {
   const finished = status === "finished";
-  const { date, time } = formatDateParts(startsAt);
+  const live = status === "live";
+  const headerLine = formatHeader(startsAt);
 
   return (
     <article
@@ -117,65 +120,58 @@ export function MatchCard({
         )}
       </div>
 
-      <header className="flex items-center justify-between gap-2 border-b bg-background/60 px-4 py-2 text-xs text-muted-foreground backdrop-blur-sm">
-        <span className="flex items-center gap-1.5">
-          <span className="font-medium uppercase tracking-wide text-foreground/80">
-            {date}
-          </span>
-          <span>·</span>
-          <span>{time}</span>
+      <header className="flex items-center justify-between gap-2 border-b bg-background/60 px-3 py-2 text-[11px] backdrop-blur-sm">
+        <span className="whitespace-nowrap font-semibold uppercase tracking-wide text-foreground/80">
+          {headerLine}
         </span>
-        <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1.5">
           {groupName && (
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
               Grupo {groupName}
             </span>
           )}
           {stage && stage !== "Fase de grupos" && (
-            <span className="text-[10px] uppercase">{stage}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {stage}
+            </span>
           )}
-          {statusBadge(status)}
+          {exceptionalStatusBadge(status)}
         </span>
       </header>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-5">
         <TeamTrigger
           code={homeCode}
           className="flex flex-col items-center gap-2 text-center"
         >
           <TeamFlag url={homeFlagUrl} alt={homeName} size="xl" />
-          <div>
-            <p className="font-semibold leading-tight">{homeName}</p>
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold leading-tight">{homeName}</p>
             {homeCode && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 {homeCode}
               </p>
             )}
           </div>
         </TeamTrigger>
 
-        <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex flex-col items-center justify-center">
           {finished ? (
             <p className="text-3xl font-extrabold tabular-nums">
               {homeScore ?? "-"}
               <span className="mx-2 text-muted-foreground">-</span>
               {awayScore ?? "-"}
             </p>
-          ) : status === "live" ? (
+          ) : live ? (
             <p className="text-sm font-extrabold uppercase tracking-widest text-destructive">
               EN VIVO
             </p>
           ) : (
-            <>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                vs
-              </p>
-              <Countdown
-                startsAt={startsAt}
-                variant="block"
-                className="text-foreground"
-              />
-            </>
+            <Countdown
+              startsAt={startsAt}
+              variant="block"
+              className="text-foreground"
+            />
           )}
         </div>
 
@@ -184,10 +180,10 @@ export function MatchCard({
           className="flex flex-col items-center gap-2 text-center"
         >
           <TeamFlag url={awayFlagUrl} alt={awayName} size="xl" />
-          <div>
-            <p className="font-semibold leading-tight">{awayName}</p>
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold leading-tight">{awayName}</p>
             {awayCode && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                 {awayCode}
               </p>
             )}
