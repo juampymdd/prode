@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft, Flag, Shield, UserPlus, Users } from "lucide-react";
 import { requireAppAdmin } from "@/lib/auth/require-user";
+import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,13 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   await requireAppAdmin();
+
+  const supabase = await createClient();
+  const { count: pendingRaw } = await supabase
+    .from("signup_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+  const pendingCount = pendingRaw ?? 0;
 
   return (
     <TeamModalProvider>
@@ -35,6 +43,14 @@ export default async function AdminLayout({
                   <Link href="/admin/signup-requests">
                     <UserPlus className="size-4" />
                     Solicitudes
+                    {pendingCount > 0 && (
+                      <span
+                        className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold leading-none text-destructive-foreground"
+                        aria-label={`${pendingCount} solicitudes pendientes`}
+                      >
+                        {pendingCount > 99 ? "99+" : pendingCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
                 <Button asChild variant="secondary" size="sm">

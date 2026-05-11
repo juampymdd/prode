@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const supabase = await createClient();
-  const [{ data: matches }, ranking, { count: predictionsCount }] =
+  const [{ data: matches }, ranking, { count: predictionsCount }, { count: finishedCount }] =
     await Promise.all([
       supabase
         .from("matches")
@@ -43,15 +43,19 @@ export default async function DashboardPage() {
         .from("predictions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id),
+      supabase
+        .from("matches")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "finished"),
     ]);
 
   const upcoming = (matches ?? []) as unknown as MatchRow[];
   const myEntry = ranking.find((r) => r.userId === user.id);
   const myPredCount = predictionsCount ?? 0;
 
-  // Show real podium / position only once someone has actually scored.
-  // Otherwise everyone is tied at 0 and "#2 with 0 pts" is misleading.
-  const hasResults = ranking.some((r) => r.totalPoints > 0);
+  // Podium and "tu posición" stay hidden until the first match has finished.
+  // Before that, everyone sits at 0 and showing positions would be noise.
+  const firstMatchPlayed = (finishedCount ?? 0) > 0;
   const nextKickoff = upcoming[0]?.starts_at ?? null;
 
   const accountDisabled = isProfileDisabled(profile);
@@ -90,7 +94,7 @@ export default async function DashboardPage() {
               Tu pronóstico, tus puntos, tu lugar en el ranking.
             </p>
           </div>
-          {hasResults && myEntry && (
+          {firstMatchPlayed && myEntry && (
             <div className="rounded-2xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm ring-1 ring-white/20">
               <p className="text-xs uppercase tracking-wider opacity-80">Tu posición</p>
               <p className="text-3xl font-extrabold leading-none">
@@ -107,7 +111,7 @@ export default async function DashboardPage() {
           <div className="mt-6 border-t border-white/15 pt-5">
             <HypeCountdown
               startsAt={nextKickoff}
-              label={hasResults ? "Próximo partido en" : "El Mundial arranca en"}
+              label={firstMatchPlayed ? "Próximo partido en" : "El Mundial arranca en"}
             />
           </div>
         )}
@@ -175,9 +179,9 @@ export default async function DashboardPage() {
             <CardContent className="py-6">
               <Podium
                 top={
-                  hasResults
+                  firstMatchPlayed
                     ? ranking.slice(0, 3).map((r) => ({
-                        position: r.position,
+                        position: r.position as 1 | 2 | 3,
                         name: r.name,
                         totalPoints: r.totalPoints,
                         exactHits: r.exactHits,
@@ -185,7 +189,7 @@ export default async function DashboardPage() {
                     : []
                 }
               />
-              {!hasResults && (
+              {!firstMatchPlayed && (
                 <p className="mt-4 text-center text-xs italic text-muted-foreground">
                   El podio se llena con los primeros resultados.
                 </p>

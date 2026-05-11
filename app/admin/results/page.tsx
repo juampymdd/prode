@@ -1,3 +1,4 @@
+import { Flag } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/layout/empty-state";
@@ -45,9 +46,12 @@ export default async function AdminResultsPage({
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-extrabold tracking-tight">Resultados</h1>
-        <p className="text-muted-foreground">
+      <header className="space-y-2 text-center">
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          <Flag className="size-6 text-primary md:size-7" aria-hidden />
+          Resultados
+        </h1>
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           Al guardar el resultado, el partido pasa a finalizado y se recalculan
           los puntos de todas las predicciones automáticamente.
         </p>

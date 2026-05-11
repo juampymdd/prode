@@ -286,6 +286,16 @@ function formatShortDate(iso: string) {
   });
 }
 
+function formatTimestamp(iso: string) {
+  return new Date(iso).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 function statusLabel(s: UserPredictionEntry["status"]) {
   switch (s) {
     case "finished":
@@ -317,58 +327,70 @@ function PredictionItem({
         ? "bg-muted text-muted-foreground"
         : "bg-muted/60 text-muted-foreground";
 
+  // Differentiate "cargada" vs "actualizada" when the row has been touched
+  // after the initial insert.
+  const wasUpdated = pred.updatedAt !== pred.createdAt;
+  const stampLabel = wasUpdated ? "Actualizada" : "Cargada";
+  const stampValue = wasUpdated ? pred.updatedAt : pred.createdAt;
+
   return (
-    <li className="flex items-center gap-3 px-3 py-2 text-xs">
-      <div className="w-12 shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
-        {formatShortDate(pred.startsAt)}
-      </div>
+    <li className="flex flex-col gap-1 px-3 py-2 text-xs">
+      <div className="flex items-center gap-3">
+        <div className="w-12 shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
+          {formatShortDate(pred.startsAt)}
+        </div>
 
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-right">
-        <span className="truncate font-medium">{pred.homeName}</span>
-        <TeamFlag url={pred.homeFlagUrl} alt={pred.homeName} size="sm" />
-      </div>
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-right">
+          <span className="truncate font-medium">{pred.homeName}</span>
+          <TeamFlag url={pred.homeFlagUrl} alt={pred.homeName} size="sm" />
+        </div>
 
-      <div className="flex shrink-0 flex-col items-center gap-0.5">
-        <span
-          className={cn(
-            "rounded-md px-2 py-0.5 text-xs font-extrabold tabular-nums",
-            finished ? "bg-secondary" : "bg-muted text-muted-foreground",
-          )}
-        >
-          {pred.homeScore ?? "–"}–{pred.awayScore ?? "–"}
-        </span>
-        <span className="font-mono text-[10px] text-muted-foreground">
-          tu: {pred.predHome}-{pred.predAway}
-        </span>
-      </div>
-
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <TeamFlag url={pred.awayFlagUrl} alt={pred.awayName} size="sm" />
-        <span className="truncate font-medium">{pred.awayName}</span>
-      </div>
-
-      <div className="flex w-16 shrink-0 flex-col items-end gap-0.5">
-        <span
-          className={cn(
-            "inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[10px] font-bold",
-            pillClass,
-            muted && !pred.exactHit && !pred.winnerHit && "opacity-70",
-          )}
-        >
-          {pred.exactHit && <Star className="size-2.5" />}
-          {finished ? `+${pred.points}` : "—"}
-        </span>
-        {label && (
+        <div className="flex shrink-0 flex-col items-center gap-0.5">
           <span
             className={cn(
-              "text-[9px] uppercase tracking-wider",
-              live ? "font-bold text-destructive" : "text-muted-foreground",
+              "rounded-md px-2 py-0.5 text-xs font-extrabold tabular-nums",
+              finished ? "bg-secondary" : "bg-muted text-muted-foreground",
             )}
           >
-            {label}
+            {pred.homeScore ?? "–"}–{pred.awayScore ?? "–"}
           </span>
-        )}
+          <span className="font-mono text-[10px] text-muted-foreground">
+            tu: {pred.predHome}-{pred.predAway}
+          </span>
+        </div>
+
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <TeamFlag url={pred.awayFlagUrl} alt={pred.awayName} size="sm" />
+          <span className="truncate font-medium">{pred.awayName}</span>
+        </div>
+
+        <div className="flex w-16 shrink-0 flex-col items-end gap-0.5">
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[10px] font-bold",
+              pillClass,
+              muted && !pred.exactHit && !pred.winnerHit && "opacity-70",
+            )}
+          >
+            {pred.exactHit && <Star className="size-2.5" />}
+            {finished ? `+${pred.points}` : "—"}
+          </span>
+          {label && (
+            <span
+              className={cn(
+                "text-[9px] uppercase tracking-wider",
+                live ? "font-bold text-destructive" : "text-muted-foreground",
+              )}
+            >
+              {label}
+            </span>
+          )}
+        </div>
       </div>
+
+      <p className="pl-15 text-[10px] text-muted-foreground/80">
+        {stampLabel}: <time dateTime={stampValue}>{formatTimestamp(stampValue)}</time>
+      </p>
     </li>
   );
 }

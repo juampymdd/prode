@@ -67,15 +67,15 @@ export default async function StandingsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 md:py-12">
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+      <header className="space-y-3 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
             <TableIcon className="size-6 text-primary md:size-7" />
             Tablas en vivo
           </h1>
           <StandingsRealtime />
         </div>
-        <p className="max-w-2xl text-muted-foreground">
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           Las 12 tablas de la fase de grupos del Mundial 2026. Arrancan en
           cero y se actualizan automáticamente cuando se cargan los resultados.
           Top 2 de cada grupo clasifica + los 8 mejores terceros.

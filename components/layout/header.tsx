@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ListChecks, ShieldCheck, Table as TableIcon, Trophy } from "lucide-react";
+import { Goal, ShieldCheck, Table as TableIcon, Trophy } from "lucide-react";
 import { getUserWithProfile } from "@/lib/auth/get-user";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { UserMenu } from "@/components/layout/user-menu";
 
 const NAV_LINKS = [
-  { href: "/partidos", label: "Partidos", icon: ListChecks },
+  { href: "/partidos", label: "Partidos", icon: Goal },
   { href: "/standings", label: "Tablas", icon: TableIcon },
   { href: "/ranking", label: "Ranking", icon: Trophy },
 ] as const;

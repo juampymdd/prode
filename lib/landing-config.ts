@@ -6,12 +6,6 @@
 
 export const MUNDIAL_KICKOFF_ISO = "2026-06-11T17:00:00-03:00";
 
-export const PODIUM_POSITIONS = [
-  { position: 1, label: "Campeón" },
-  { position: 2, label: "Sub-campeón" },
-  { position: 3, label: "Tercer puesto" },
-] as const;
-
 export interface ScoringRule {
   iconName: "Target" | "Trophy" | "ShieldCheck" | "CheckCircle2";
   title: string;

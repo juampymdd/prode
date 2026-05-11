@@ -33,15 +33,19 @@ export async function getGlobalRanking(): Promise<RankingEntry[]> {
     throw new Error("No pudimos cargar el ranking.");
   }
 
-  const rows = ((data ?? []) as RpcRow[]).map((r) => ({
-    userId: r.user_id,
-    name: r.name ?? "Jugador",
-    isAdmin: r.is_app_admin,
-    totalPoints: r.total_points,
-    exactHits: r.exact_hits,
-    winnerHits: r.winner_hits,
-    predictionsCount: r.predictions_count,
-  }));
+  // Admins don't play — they only load results and curate accounts. Filter
+  // them out so they never appear in the podium or the leaderboard.
+  const rows = ((data ?? []) as RpcRow[])
+    .filter((r) => !r.is_app_admin)
+    .map((r) => ({
+      userId: r.user_id,
+      name: r.name ?? "Jugador",
+      isAdmin: r.is_app_admin,
+      totalPoints: r.total_points,
+      exactHits: r.exact_hits,
+      winnerHits: r.winner_hits,
+      predictionsCount: r.predictions_count,
+    }));
 
   rows.sort((a, b) => {
     if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;

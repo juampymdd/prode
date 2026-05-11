@@ -31,19 +31,21 @@
             border="0"
             style="max-width:560px;width:100%;background-color:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,0.08);"
           >
-            <!-- Header con logo sobre fondo de marca -->
+            <!-- Brand header: gold accent strip + wordmark in HTML so it
+                 always renders crisp and high-contrast, even if images are
+                 blocked or the client forces dark mode. -->
             <tr>
-              <td
-                align="center"
-                style="background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 60%,#1e3a8a 100%);padding:32px 24px;"
-              >
-                <img
-                  src="{{ .SiteURL }}/prode-logo.png"
-                  alt="Prode 26 — Mundial 2026"
-                  width="160"
-                  height="150"
-                  style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:160px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.25));"
-                />
+              <td style="background-color:#f2c76a;height:6px;line-height:6px;font-size:0;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td align="center" style="background-color:#ffffff;padding:36px 24px 28px 24px;">
+                <p style="margin:0 0 6px 0;font-size:11px;font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:#94a3b8;">
+                  Mundial 2026
+                </p>
+                <p style="margin:0;font-size:34px;line-height:1;font-weight:800;letter-spacing:-0.01em;">
+                  <span style="color:#1e3a8a;">Prode</span>
+                  <span style="color:#d4a017;">26</span>
+                </p>
               </td>
             </tr>
 

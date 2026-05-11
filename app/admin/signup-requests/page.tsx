@@ -73,12 +73,12 @@ export default async function SignupRequestsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-          <UserPlus className="size-6 text-primary" aria-hidden />
+      <header className="space-y-2 text-center">
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          <UserPlus className="size-6 text-primary md:size-7" aria-hidden />
           Solicitudes de registro
         </h1>
-        <p className="text-muted-foreground">
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           Aprobá una solicitud para mandarle el magic link y dar de alta la
           cuenta. Rechazada queda bloqueada hasta que la elimines.
         </p>

@@ -53,11 +53,12 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-extrabold tracking-tight">
+      <header className="space-y-2 text-center">
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          <Users className="size-6 text-primary md:size-7" aria-hidden />
           Usuarios del prode
         </h1>
-        <p className="text-muted-foreground">
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           Invitá gente con un magic link. Sin contraseñas: el invitado abre el
           link y queda dentro del prode.
         </p>

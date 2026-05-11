@@ -1,3 +1,4 @@
+import { Goal } from "lucide-react";
 import { requireUser } from "@/lib/auth/require-user";
 import { createClient } from "@/lib/supabase/server";
 import { GroupsAccordion } from "@/components/matches/group-accordion";
@@ -11,6 +12,10 @@ import {
 } from "@/components/matches/fase-tabs";
 import { KnockoutList } from "@/components/matches/knockout-list";
 import type { BracketCardData } from "@/components/matches/bracket-card";
+import {
+  TeamPodium,
+  type TeamPodiumEntry,
+} from "@/components/ranking/team-podium";
 
 type MatchStatus = "scheduled" | "locked" | "live" | "finished";
 
@@ -101,9 +106,12 @@ export default async function PartidosPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 md:py-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-extrabold tracking-tight">Partidos</h1>
-        <p className="text-muted-foreground">
+      <header className="space-y-2 text-center">
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          <Goal className="size-6 text-primary md:size-7" aria-hidden />
+          Partidos
+        </h1>
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           Cargá tu predicción antes del kick-off. Cambiá de fase desde las
           pestañas.
         </p>
@@ -271,10 +279,104 @@ function EliminatoriaSection({
     };
   });
 
-  return (
-    <KnockoutList
-      matches={cards}
-      variant={fase === "final" ? "final" : "grid"}
-    />
+  if (fase === "final") {
+    const podiumEntries = computeFinalPodium(stageMatches);
+    return (
+      <div className="space-y-6">
+        {podiumEntries.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-center text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Podio del Mundial
+            </h2>
+            <div className="rounded-2xl border bg-card/80 p-4 backdrop-blur sm:p-6">
+              <TeamPodium entries={podiumEntries} />
+            </div>
+          </section>
+        )}
+        <KnockoutList matches={cards} variant="final" />
+      </div>
+    );
+  }
+
+  return <KnockoutList matches={cards} variant="grid" />;
+}
+
+/**
+ * Build the World Cup podium from the two final-stage matches:
+ *   1° = winner of "Final"
+ *   2° = loser  of "Final"
+ *   3° = winner of "Match for third place"
+ *
+ * Returns slots only when the corresponding match is finished and has a
+ * decisive winner. The TeamPodium renders the missing slots as placeholders
+ * so the layout stays consistent before the tournament finishes.
+ */
+function computeFinalPodium(stageMatches: MatchDbRow[]): TeamPodiumEntry[] {
+  const finalMatch = stageMatches.find((m) => m.stage === "Final");
+  const thirdPlace = stageMatches.find(
+    (m) => m.stage === "Match for third place",
   );
+
+  const entries: TeamPodiumEntry[] = [];
+
+  if (finalMatch && finalMatch.status === "finished") {
+    const winnerSide = pickWinner(finalMatch);
+    if (winnerSide) {
+      entries.push({
+        position: 1,
+        name: winnerSide.winner.name,
+        code: winnerSide.winner.code,
+        flagUrl: winnerSide.winner.flag_url,
+        subtitle: `${winnerSide.winnerScore} - ${winnerSide.loserScore} a ${winnerSide.loser.code ?? winnerSide.loser.name}`,
+      });
+      entries.push({
+        position: 2,
+        name: winnerSide.loser.name,
+        code: winnerSide.loser.code,
+        flagUrl: winnerSide.loser.flag_url,
+        subtitle: `Final: ${winnerSide.loserScore} - ${winnerSide.winnerScore}`,
+      });
+    }
+  }
+
+  if (thirdPlace && thirdPlace.status === "finished") {
+    const winnerSide = pickWinner(thirdPlace);
+    if (winnerSide) {
+      entries.push({
+        position: 3,
+        name: winnerSide.winner.name,
+        code: winnerSide.winner.code,
+        flagUrl: winnerSide.winner.flag_url,
+        subtitle: `${winnerSide.winnerScore} - ${winnerSide.loserScore} a ${winnerSide.loser.code ?? winnerSide.loser.name}`,
+      });
+    }
+  }
+
+  return entries;
+}
+
+function pickWinner(m: MatchDbRow):
+  | {
+      winner: NonNullable<MatchDbRow["home"]>;
+      loser: NonNullable<MatchDbRow["home"]>;
+      winnerScore: number;
+      loserScore: number;
+    }
+  | null {
+  if (
+    !m.home ||
+    !m.away ||
+    m.home_score == null ||
+    m.away_score == null ||
+    m.home_score === m.away_score // Ties shouldn't happen in knockouts, but skip if they do.
+  ) {
+    return null;
+  }
+  const homeWon = m.home_score > m.away_score;
+  return {
+    winner: homeWon ? m.home : m.away,
+    loser: homeWon ? m.away : m.home,
+    winnerScore: homeWon ? m.home_score : m.away_score,
+    loserScore: homeWon ? m.away_score : m.home_score,
+  };
 }

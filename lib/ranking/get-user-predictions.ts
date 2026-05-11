@@ -22,6 +22,8 @@ export interface UserPredictionEntry {
   points: number;
   exactHit: boolean;
   winnerHit: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface RawRow {
@@ -31,6 +33,8 @@ interface RawRow {
   points: number;
   exact_hit: boolean;
   winner_hit: boolean;
+  created_at: string;
+  updated_at: string;
   match: {
     id: string;
     starts_at: string;
@@ -57,6 +61,8 @@ export async function fetchUserPredictions(
        points,
        exact_hit,
        winner_hit,
+       created_at,
+       updated_at,
        match:matches!predictions_match_id_fkey(
          id, starts_at, status, stage, group_name, home_score, away_score,
          home:teams!matches_home_team_id_fkey(name, code, flag_url),
@@ -91,6 +97,8 @@ export async function fetchUserPredictions(
         points: r.points,
         exactHit: r.exact_hit,
         winnerHit: r.winner_hit,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
       } satisfies UserPredictionEntry;
     })
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));

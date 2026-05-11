@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SignupForm } from "@/components/signup/signup-form";
 import { getUser } from "@/lib/auth/get-user";
@@ -16,11 +17,12 @@ export default async function SignupPage() {
 
   return (
     <Card className="border-border/60 shadow-xl">
-      <CardHeader className="space-y-2">
-        <h1 className="text-2xl font-extrabold tracking-tight">
+      <CardHeader className="space-y-2 text-center">
+        <h1 className="flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight">
+          <UserPlus className="size-6 text-primary" aria-hidden />
           Sumarme al prode
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="mx-auto text-sm text-muted-foreground">
           Completá tus datos. Cuando un admin apruebe tu solicitud te
           mandamos un mail con el link para entrar.
         </p>
